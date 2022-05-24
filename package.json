@@ -1,21 +1,15 @@
 {
-  "name": "project-productsmanagementgroup30",
+  "name": "project-5",
   "version": "1.0.0",
   "description": "",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "nodemon src/index.js"
   },
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/BadGood2/project-productsManagementGroup30.git"
-  },
+  "keywords": [],
   "author": "",
   "license": "ISC",
-  "bugs": {
-    "url": "https://github.com/BadGood2/project-productsManagementGroup30/issues"
-  },
-  "homepage": "https://github.com/BadGood2/project-productsManagementGroup30#readme",
   "dependencies": {
     "aws-sdk": "^2.1141.0",
     "bcrypt": "^5.0.1",

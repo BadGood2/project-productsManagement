@@ -1,26 +1,22 @@
-const express = require('express');
-const bodyParser = require('body-Parser');
-const route = require('./routes/routes.js')
-const { default: mongoose } = require('mongoose');
-const app = express();
+const express = require('express')
+const multer = require("multer")
+const { AppConfig } = require('aws-sdk')
+const bodyparser = require('body-parser')
+const mongoose = require('mongoose')
 
-const multer= require("multer");
-const { AppConfig } = require('aws-sdk');
-app.use( multer().any())
+const app = express()
+app.use(bodyparser.json())
+app.use(multer().any())
 
-app.use(bodyParser.json());
-app.use(bodyParser.urlencoded({ extended: true }));
+const router = require('./routes/route')
 
-mongoose.connect("mongodb+srv://nas:nas1234@cluster0.fci9p.mongodb.net/group30Database", {
-    useNewUrlParser: true
-})
-    .then(() => console.log("MongoDb is connected"))
+mongoose.connect("mongodb+srv://amit-DB:amit3112@cluster0.eztoe.mongodb.net/group41Database",
+    { useNewUrlParser: true })
+    .then(() => console.log("mongoDB is Connected!!"))
     .catch(err => console.log(err))
 
-app.use('/', route);
+app.use('/', router)
 
-app.listen(process.env.PORT || 3000, function (){
-    console.log('Express app running on port: ' + (process.env.PORT || 3000))
-});
-
-
+app.listen(process.env.PORT || 3000, () => {
+    console.log("server connected at Port :", process.env.PORT || 3000)
+})

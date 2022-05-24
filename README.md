@@ -1,4 +1,3 @@
-# project-productsManagementGroup30
 #Uranium
 ## Project - Products Management
 
