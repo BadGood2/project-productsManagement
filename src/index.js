@@ -4,10 +4,14 @@ const route = require('./routes/routes.js')
 const { default: mongoose } = require('mongoose');
 const app = express();
 
+const multer= require("multer");
+const { AppConfig } = require('aws-sdk');
+app.use( multer().any())
+
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 
-mongoose.connect("mongodb+srv://nas:nas1234@cluster0.fci9p.mongodb.net/group24Database", {
+mongoose.connect("mongodb+srv://nas:nas1234@cluster0.fci9p.mongodb.net/group30Database", {
     useNewUrlParser: true
 })
     .then(() => console.log("MongoDb is connected"))
