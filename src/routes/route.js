@@ -3,7 +3,7 @@ const router = express.Router()
 const auth = require("../Middlewares/auth")
 
 const { postRegister, userLogin, getProfileData, updateProfile } = require('../controllers/userController')
-
+const { addProducts, getProducts } = require("../controllers/productController")
 
 router.post('/register', postRegister)
 
@@ -13,7 +13,11 @@ router.get("/user/:userId/profile",auth.authentication, getProfileData)
 
 router.put("/user/:userId/profile", auth.authentication, auth.authorization, updateProfile)
 
+//PRODUCT API'S
 
+router.post("/products", addProducts)
+
+router.get("/products", getProducts)
 
 
 

@@ -138,10 +138,10 @@ const decodeToken = (token) => {
 const userLogin = async (req, res) => {
     try {
         let data = req.body
-        if (!isValidRequestBody(data)) return res.status(400).send({ status: false, msg: 'Enter details for user creation.' })
+        if (!isValidRequestBody(data)) return res.status(400).send({ status: false, msg: 'Enter details.' })
 
         if (Object.keys(data).length === 2 && data.email && data.password) {
-            let hashedPass = await userModel.findOne({ email: data.email }).select({ _id: 0, password: 1 })
+            let hashedPass = await userModel.findOne({ email : data.email }).select({ _id: 0, password: 1 })
             if (!await bcrypt.compare(data.password, hashedPass.password)) return res.status(400).send({ status: false, msg: "Invalid credentials" })
 
             data.password = hashedPass.password
