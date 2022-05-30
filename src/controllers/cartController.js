@@ -44,14 +44,19 @@ const removeProduct = async function (req, res) {
         if(cartExists.userId.toString() !== req.params.userId) return res.status(400).send({status : false, msg : "Params userId does not match with the userId inside of Cart"})
 
         if (removeProduct == 0) {
+            let flag 
             let quantity; let totalPrice;
             let itemsArr = await cartModel.findById({ _id: cartId })
             if (itemsArr) {
                 for (let i = 0; i < cartExists.items.length; i++) {
                     if (cartExists.items[i].productId.toString() == productId) {
+                        flag = 1
                         quantity = cartExists.items[i].quantity
                     }
                 }
+                if(flag !== 1) return res.status(400).send({status : false, msg : "Deleted or does not Exists"})
+           
+
                 totalPrice = cartExists.totalPrice
                 totalPrice -= (productExists.price * quantity)
                 let newCart = await cartModel.findOneAndUpdate({ _id: cartId }, { $pull: { items: { productId: productId } }, $set: { totalPrice: totalPrice }, $inc: { totalItems: -1 } }, { new: true })
@@ -61,14 +66,17 @@ const removeProduct = async function (req, res) {
         else if (removeProduct == 1) {
             
             let prodPrice = productExists.price;
+            let flag 
             let quantity;
             let totalPrice = cartExists.totalPrice
             totalPrice -= prodPrice
             for(let i = 0;i < cartExists.items.length; i++){
                 if (cartExists.items[i].productId.toString() == productId) {
+                    flag = 1
                     quantity = cartExists.items[i].quantity
                 }
             }
+            if(flag !== 1) return res.status(400).send({status : false, msg : "Deleted or does not Exists"})
             
             if(quantity > 1){
                 let newCart = await cartModel.findOneAndUpdate({_id : cartId, 'items.productId' : productId}, {$set : {totalPrice : totalPrice}, $inc : {'items.$.quantity' : -1}},{new : true})

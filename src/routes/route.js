@@ -26,15 +26,15 @@ router.delete("/products/:productId", deleteProduct)
 
 //CART API's
 
-router.post("/users/:userId/cart", postCart)
+router.post("/users/:userId/cart",/*auth.authentication, auth.authorization,*/ postCart)
 
-router.put("/users/:userId/cart", removeProduct)
+router.put("/users/:userId/cart",/*auth.authentication, auth.authorization,*/ removeProduct)
 
 //ORDER API's
 
-router.post("/users/:userId/orders", postOrder)
+router.post("/users/:userId/orders",auth.authentication, auth.authorization, postOrder)
 
-router.put("/users/:userId/orders", updateOrder)
+router.put("/users/:userId/orders",auth.authentication, auth.authorization, updateOrder)
 
 /*------------------------------------------if api is invalid OR wrong URL----------------------------------------------------------*/
 
