@@ -2,9 +2,7 @@ const mongoose = require("mongoose")
 const validation = require("../validator/validator")
 const userModel = require("../models/userModel")
 const productModel = require("../models/productModel")
-const { response } = require("express")
 const cartModel = require("../models/cartModel")
-const { findById } = require("../models/userModel")
 
 // Updates a cart by either decrementing the quantity of a product by 1 or deleting a product from the cart.
 // - Get cart id in request body.
@@ -29,9 +27,7 @@ const removeProduct = async function (req, res) {
 
         let { cartId, productId, removeProduct } = req.body
 
-        if (!validation.isValid(cartId) || !validation.isValid(productId) || !validation.isValid(removeProduct)) return res.status(400).send({ status: false, msg: "Bad fields for request body/CartId" })
-
-        if (!validation.isValid(productId) || !validation.isValid(productId) || !validation.isValid(removeProduct)) return res.status(400).send({ status: false, msg: "Bad fields for request body/productId" })
+        if (!validation.isValid(cartId) || !validation.isValid(productId) || !validation.isValid(removeProduct)) return res.status(400).send({ status: false, msg: "Bad fields for request body, missing or Invalid fields" })
 
         if (!(removeProduct == '0' || removeProduct == '1')) return res.status(400).send({ status: false, msg: "Bad field for removeProduct" })
         removeProduct = Number(removeProduct)
@@ -113,13 +109,13 @@ const postCart = async function (req, res) {
         if (!validation.validBody(req.body)) return res.status(400).send({ status: false, msg: "Invalid or Empty Body" })
         if (req.body.cartId == undefined) {
             if (req.body.productId) {
-                if (!validation.validObjectId(req.body.productId)) return res.status(400).send({ status: false, msg: "Invalid productId" })
+                if (!validation.validObjectId(req.body.productId)) return res.status(400).send({ status: false, msg: "Invalid or missing productId" })
                 let validProdId = await productModel.findOne({ _id: data.productId, isDeleted: false })
                 if (!validProdId) return res.status(400).send({ status: false, msg: "ProductId Invalid or Product Deleted" })
                 if (!validation.validObjectId(req.params.userId)) return res.status(400).send({ status: false, msg: "UserID in params not Valid" })
 
                 let cartExists = await cartModel.findOne({ userId: req.params.userId })
-                if (cartExists) return res.status(400).send({ status: false, msg: "Cart Exists for this user, Please enter the cartId" })
+                if (cartExists) return res.status(400).send({ status: false, msg: "Cart Created for this user, Please enter the cartId" })
 
                 data.items = []
 
@@ -146,7 +142,7 @@ const postCart = async function (req, res) {
             }
         }
         else {
-            if (!validation.validObjectId(req.body.productId)) return res.status(400).send({ status: false, msg: "Invalid productId" })
+            if (!validation.validObjectId(req.body.productId)) return res.status(400).send({ status: false, msg: "Invalid or missing productId" })
             let validProdId = await productModel.findOne({ _id: data.productId, isDeleted: false })
             if (!validProdId) return res.status(400).send({ status: false, msg: "ProductId Invalid or Product Deleted" })
             if (!validation.validObjectId(req.params.userId)) return res.status(400).send({ status: false, msg: "UserID in params not Valid" })
@@ -158,6 +154,9 @@ const postCart = async function (req, res) {
                 data.quantity = Number(data.quantity)
 
             }
+            let cartExists = await cartModel.findById({ _id: data.cartId })
+            if(cartExists.userId.toString() !== req.params.userId) return res.status(400).send({status : false, msg : "Params userId does not match with the userId inside of Cart"})
+
 
 
             let flag = 0
