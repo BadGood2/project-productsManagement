@@ -15,8 +15,8 @@ router.get("/user/:userId/profile",auth.authentication, getProfileData)
 
 router.put("/user/:userId/profile", auth.authentication, auth.authorization, updateProfile)
 
-router.put("/user/:userId/profile", updateDetails)
 //PRODUCT API'S
+router.put("/user/:userId/profile", updateDetails)
 
 router.post("/products", addProducts)
 
@@ -32,9 +32,9 @@ router.put("/users/:userId/cart",/*auth.authentication, auth.authorization,*/ re
 
 //ORDER API's
 
-router.post("/users/:userId/orders",auth.authentication, auth.authorization, postOrder)
+router.post("/users/:userId/orders",/*auth.authentication, auth.authorization,*/ postOrder)
 
-router.put("/users/:userId/orders",auth.authentication, auth.authorization, updateOrder)
+router.put("/users/:userId/orders",/*auth.authentication, auth.authorization,*/ updateOrder)
 
 /*------------------------------------------if api is invalid OR wrong URL----------------------------------------------------------*/
 

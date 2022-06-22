@@ -2,6 +2,7 @@ const orderModel = require("../models/orderModel")
 const validation = require('../validator/validator')
 const userModel = require("../models/userModel")
 const productModel = require('../models/productModel')
+const cartModel = require("../models/cartModel")
 
 
 // Make sure the userId in params and in JWT token match.
@@ -18,34 +19,26 @@ const postOrder = async function (req, res) {
         let orderExists = await orderModel.findOne({ userId: req.params.userId })
         if (orderExists) return res.status(400).send({ status: false, msg: "Order already exists for this UserId" })
 
-        data.items = JSON.parse(data.items)
-        if (!Array.isArray(data.items)) return res.status(400).send({ status: false, msg: "Items field should be an Array, no double quotes" })
 
+        let cartDetails = await cartModel.findOne({ userId: req.params.userId })
+        if (!cartDetails) return res.status(400).send({ status: false, msg: "User has no Cart" })
+
+        let cart = cartDetails.items
 
         let totalPrice = 0, totalQuantity = 0;
-        for (let i = 0; i < data.items.length; i++) {
-            let flag;
-            let keys = Object.keys(data.items[i])
-            keys.forEach((key) => {
-                if (!/^(productId|quantity){1}$/.test(key)) {
-                    flag = 'error'
-                }
-            })
-            if (flag == 'error') return res.status(400).send({ status: false, msg: "Bad field inside Array" })
+        for (let i = 0; i < cart.length; i++) {
 
-            let prodDetails = await productModel.findById({ _id: data.items[i].productId })
+            let prodDetails = await productModel.findById({ _id: cart[i].productId })
             if (!prodDetails) return res.status(400).send({ status: false, msg: "Error while fetching product Details" })
 
-            if (!/^[0-9]+$/.test(data.items[i].quantity)) return res.status(400).send({ status: false, msg: "quantity field Invalid" })
-                
-
-            totalPrice += (data.items[i].quantity * prodDetails.price)
-            totalQuantity += data.items[i].quantity
+            totalPrice += (cart[i].quantity * prodDetails.price)
+            totalQuantity += cart[i].quantity
         }
         data.userId = req.params.userId
         data.totalPrice = totalPrice
         data.totalQuantity = totalQuantity
-        data.totalItems = data.items.length
+        data.totalItems = cart.length
+        data.items = cart
 
         if (data?.cancellable) {
             data.cancellable = JSON.parse(data.cancellable)
@@ -55,6 +48,9 @@ const postOrder = async function (req, res) {
         if (data?.status) {
             if (!/^(pending|completed|canceled){1}$/) return res.status(400).send({ status: false, msg: "Takes a ENUM value " })
         }
+
+        let cartEmpty = await cartModel.findOneAndUpdate({ userId: req.params.userId }, { items: [], totalPrice: 0, totalItems: 0 })
+
 
         let orderCreate = await orderModel.create(data)
         res.status(201).send({ status: true, data: orderCreate })
@@ -73,7 +69,7 @@ const updateOrder = async function (req, res) {
         let userExist = await userModel.findById({ _id: req.params.userId })
         if (!userExist) return res.status(400).send({ status: false, msg: "UserId does not Exists" })
         let orderExists = await orderModel.findOne({ userId: req.params.userId })
-        if (!orderExists) return res.status(400).send({ status: false, msg: "Order does not exists for this UserId" })
+        if (!orderExists) return res.status(400).send({ status: false, msg: "Order does not exists for this UserId given in params" })
 
         if (!validation.isValid(data.orderId)) return res.status(400).send({ status: false, msg: "Bad orderId" })
 
@@ -92,6 +88,9 @@ const updateOrder = async function (req, res) {
         else if (data.status == 'completed') {
             let updOrd = await orderModel.findOneAndUpdate({ _id: data.orderId }, { status: 'completed' }, { new: true })
             return res.status(200).send({ status: true, data: updOrd })
+        }
+        else if(data.status == 'pending'){
+            return res.status(400).send({status : false, msg : "Order cannot be set as pending"})
         }
 
     } catch (e) {

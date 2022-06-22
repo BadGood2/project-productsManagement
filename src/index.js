@@ -3,14 +3,14 @@ const multer = require("multer")
 const { AppConfig } = require('aws-sdk')
 const bodyparser = require('body-parser')
 const mongoose = require('mongoose')
+const router = require('./routes/route')
 
 const app = express()
 app.use(bodyparser.json())
 app.use(multer().any())
 
-const router = require('./routes/route')
 
-mongoose.connect("mongodb+srv://nas:nas1234@cluster0.fci9p.mongodb.net/group30Database",
+mongoose.connect("mongodb+srv://nas:nas1234@cluster0.fci9p.mongodb.net/shopping-cart-database",
     { useNewUrlParser: true })
     .then(() => console.log("mongoDB is Connected!!"))
     .catch(err => console.log(err))

@@ -1,6 +1,6 @@
 const jwt = require("jsonwebtoken")
-const secret = "Product Management project group-30."
-const exp = '360000s'
+const secret = "Shopping-Cart"
+const exp = '85000s'
 
 const decodeToken = (token) => {
     return jwt.verify(token, secret, (err, data) => {

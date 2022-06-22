@@ -106,13 +106,14 @@ const getProducts = async function (req, res) {
             if (!isValid(priceGreaterThan)) {
                 return res.status(400).send({ status: false, message: "priceGreaterThan is required" })
             }
-            if (!/^[0-9]*$/.test(priceGreaterThan)) {
+            if (!/^[0-9]+$/.test(priceGreaterThan)) {
                 return res.status(400).send({ status: false, message: "please enter number value at priceGreaterThan field" })
             }
             if (!isValid(priceLessThan)) {
                 return res.status(400).send({ status: false, message: "priceGreaterThan is required" })
             }
-            if (!/^[0-9]*$/.test(priceLessThan)) {
+            console.log(req.query.priceGreaterThan);
+            if (!/^[0-9]+$/.test(priceLessThan)) {
                 return res.status(400).send({ status: false, message: "please enter number value at priceLessThan field" })
             }
 
