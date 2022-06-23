@@ -255,8 +255,22 @@ const updateProfile = async function (req, res) {
             let uploadedFileURL
             if (files && files.length > 0) {
                 uploadedFileURL = await uploadFile(files[0])
-            }else return res.status(400).send({status : false, msg : "add a file for image"})
+            } else return res.status(400).send({ status: false, msg: "add a file for image" })
             data.profileImage = uploadedFileURL
+        }
+        if (Object.keys(data).includes("address")) {
+            data.address = JSON.parse(data.address)
+
+            if (!isValid(address.shipping.street)) return res.status(400).send({ status: false, msg: 'Enter shipping street.' })
+            if (!isValid(address.shipping.city)) return res.status(400).send({ status: false, msg: 'Enter shipping city.' })
+            if (!isValid(address.shipping.pincode)) return res.status(400).send({ status: false, msg: 'Enter shipping pincode.' })
+
+            if (!isValid(address.billing.street)) return res.status(400).send({ status: false, msg: 'Enter billing street.' })
+            if (!isValid(address.billing.city)) return res.status(400).send({ status: false, msg: 'Enter billing city.' })
+            if (!isValid(address.billing.pincode)) return res.status(400).send({ status: false, msg: 'Enter billing pincode.' })
+
+            if (!(/^\d{6}$/.test(address.billing.pincode) && /^\d{6}$/.test(address.shipping.pincode))) return res.status(400).send({ status: false, msg: "Pincode Wrong" })
+
         }
 
         let newProfile = await userModel.findOneAndUpdate({ _id: userId }, data, { new: true })

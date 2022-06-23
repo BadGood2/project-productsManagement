@@ -50,7 +50,7 @@ let uploadFile = async (file) => {
 
 const addProducts = async function (req, res) {
     try {
-        let data = JSON.parse(req.body.body)
+        let data = req.body
 
         if (!isValidRequestBody(data)) return res.status(400).send({ status: false, msg: 'Enter details for user creation.' })
 
@@ -64,19 +64,19 @@ const addProducts = async function (req, res) {
         }
         data.productImage = uploadedFileURL
 
-
         if (!isValid(data.title)) return res.status(400).send({ status: false, msg: "Enter Title" })
-        let usedTille = await productModel.findOne({ title: data.title })
-        console.log(usedTille)
-        if (usedTille) return res.status(400).send({ status: false, msg: "Title already Present" })
+
+        let usedTitle = await productModel.findOne({ title: data.title })
+        if (usedTitle) return res.status(400).send({ status: false, msg: "Title already Present" })
+        
         if (!isValid(data.description)) return res.status(400).send({ status: false, msg: "Enter description" })
         if (data.price < 0) return res.status(400).send({ status: false, msg: "Bad Price" })
-        if (!(/INR/.test(data.currencyId))) return res.status(400).send({ status: false, msg: "Bad CurrencyId" })
-        if (!(/₹/.test(data.currencyFormat))) return res.status(400).send({ status: false, msg: "Bad CurrencyFormat" })
-        if (data.availableSizes.length <= 0) return res.status(400).send({ status: false, msg: "Add Sizes" })
+        if (!(/^(INR)$/.test(data.currencyId))) return res.status(400).send({ status: false, msg: "Bad CurrencyId" })
+        if (!(/^(₹)$/.test(data.currencyFormat))) return res.status(400).send({ status: false, msg: "Bad CurrencyFormat" })
+        if (data.availableSizes.length == 0) return res.status(400).send({ status: false, msg: "Add Sizes" })
         if (data.installments < 0) return res.status(400).send({ status: false, msg: "Bad Installments Field" })
 
-
+        data.availableSizes = JSON.parse(data.availableSizes)
         let created = await productModel.create(data)
         res.status(201).send({ status: true, msg: "Success", data: created })
 
@@ -94,10 +94,12 @@ const getProducts = async function (req, res) {
             return res.status(200).send({ status: true, data: allProducts })
         }
         else {
+            
             let size = req.query.size ?? ["S", "XS", "M", "X", "L", "XXL", "XL"]
             let title = req.query.name ?? /[A-Za-z0-9]/
-            let priceGreaterThan = Number(req.query.priceGreaterThan) ?? 0
-            let priceLessThan = Number(req.query.priceLessThan) ?? Infinity
+            let priceGreaterThan = req.query.priceGreaterThan ?? 0
+            let priceLessThan = req.query.priceLessThan ?? 9999999999
+            
 
             if (req.query.size) {
                 if (["S", "XS", "M", "X", "L", "XXL", "XL"].indexOf(req.query.size) == -1) return res.status(400).send({ status: false, msg: "Size field is Invalid" })
@@ -112,7 +114,7 @@ const getProducts = async function (req, res) {
             if (!isValid(priceLessThan)) {
                 return res.status(400).send({ status: false, message: "priceGreaterThan is required" })
             }
-            console.log(req.query.priceGreaterThan);
+            
             if (!/^[0-9]+$/.test(priceLessThan)) {
                 return res.status(400).send({ status: false, message: "please enter number value at priceLessThan field" })
             }
@@ -121,10 +123,10 @@ const getProducts = async function (req, res) {
             let regexTitle = new RegExp(title, 'ig')
 
             if (req.query.priceSort == 1 || req.query.priceSort == -1) {
-                var allProducts = await productModel.find({ $and: [{ title: regexTitle }, { availableSizes: { $in: size } }, { price: { $gt: priceGreaterThan } }, { price: { $lt: priceLessThan } }, { isDeleted: false }] }).collation({ locale: "en", strength: 2 }).sort({ price: req.query.priceSort })
+                var allProducts = await productModel.find({ $and: [{ title: regexTitle }, { availableSizes: { $in: size } }, { price: { $gt: priceGreaterThan } }, { price: { $lt: priceLessThan } }, { isDeleted: false }] }).sort({ price: req.query.priceSort })
             }
             if (req.query.priceSort == undefined) {
-                var allProducts = await productModel.find({ $and: [{ title: regexTitle }, { availableSizes: { $in: size } }, { price: { $gt: priceGreaterThan } }, { price: { $lt: priceLessThan } }, { isDeleted: false }] }).collation({ locale: "en", strength: 2 })
+                var allProducts = await productModel.find({ $and: [{ title: regexTitle }, { availableSizes: { $in: size } }, { price: { $gt: priceGreaterThan } }, { price: { $lt: priceLessThan } }, { isDeleted: false }] })
             }
             if (allProducts.length == 0)
                 return res.status(400).send({ status: false, message: "No books with selected query params" })
@@ -154,94 +156,79 @@ const deleteProduct = async function(req, res){
     }
 }
 
+//GET products BY ID
 
-//### PUT /products/:productId
-//- Updates a product by changing at least one or all fields
-
-const updateDetails = async function (req, res) {
+const getProductsById = async function (req, res) {
     try {
-        let userId = req.params.userId
-        let data = req.body
-        let { fname, lname, password, email, phone, profileImage } = data
-        if (!validation.validObjectId(userId)) {
-            return res.status(400).send({ status: false, message: "Invalid type of userId" })
-        }
-        // if(userId != req.userid){
-        //     return res.status(400).send({ status: false, message: "unauthorized user" })
-        // }
 
-        if (!validation.validBody(data)) {
-            return res.status(400).send({ status: false, message: "please provide data to update" })
-        }
-        let user = await userModel.findById({ _id: userId })
-        if (!user) {
-            return res.status(404).send({ status: false, message: "No user found" })
-        }
+        let productId = req.params.productId
+        let profileData = await productModel.findById({ _id: productId })
+        if (!profileData) return res.status(400).send({ status: false, msg: "No record found with that UserID" })
 
-        // taking input to update
-
-        if ((fname && !validation.isValid(fname)) || fname == "") {
-            return res.status(400).send({ status: false, message: "please enter Fname" })
-        }
-
-        if ((lname && !validation.isValid(lname)) || lname == "") {
-            return res.status(400).send({ status: false, message: "please enter lname" })
-        }
-        // email
-        if ((email && !validation.isValid(email)) || email == "") {
-            return res.status(400).send({ status: false, message: "please enter email" })
-        }
-        if (email && !validation.emailValid(email)) {
-            return res.status(400).send({ status: false, message: "Please enter Valid Email" })
-        }
-
-        if ((phone && !validation.isValid(phone)) || phone == "") {
-            return res.status(400).send({ status: false, message: "please enter Phone number" })
-        }
-        if (phone && !validation.mobileValid(phone)) {
-            return res.status(400).send({ status: false, message: "please enter valid Indian mobile number" })
-        }
-        let exist = await userModel.findOne({ email: email, phone: phone })
-        if (exist) {
-            return res.status(400).send({ status: false, message: "Already Exists" })
-        }
-
-        if ((password && !validation.isValid(password)) || password == "") {
-            return res.status(400).send({ status: false, message: "password is required" })
-        }
-        if (password && (!password.length >= 8 && password.length <= 15)) {
-            return res.status(400).send({ status: false, message: "Password minimum length is 8 and maximum is 15." })
-        }
-        if (password) {
-            let newHashPass = await bcrypt.hash(data.password, 10)
-            password = newHashPass
-        }
-        
-        let files = req.files
-        if ((files && files.length > 0) ) {
-
-            let uploadedFileURL = await validation.uploadFile(files[0])
-            profileImage = uploadedFileURL
-        }
-
-        let arr = Object.values(data)
-        for(let i = 0;i<arr.length;i++){
-            if(!validation.isValid(arr[i])) return res.status(400).send({status : false, msg : "Bad request Field"})
-        }
-        let keys = Object.keys(data)
-        if(keys.indexOf("address") !== -1) return res.status(400).send({status : false, msg : "please specify what to change, either shipping or billing"})
-
-        let badAddressFormat = keys.find((key) => /^address\.(billing|shipping)\.(street|city|pincode)$/.test(key))
-        console.log(badAddressFormat, keys)
-        if(!badAddressFormat) return res.status(400).send({status:false, msg : "address field must be right"})
-        
+        res.status(200).send({ status: true, msg: "User profile Data", data: profileData })
 
 
-        let updadeData = await userModel.findOneAndUpdate({ _id: userId }, data, { new: true })
-        return res.status(200).send({ data: updadeData })
 
-
+    } catch (err) {
+        res.status(500).send({ status: false, msg: err.message })
     }
+}
+
+// ### PUT /products/:productId
+// - Updates a product by changing at least one or all fields
+// - Check if the productId exists (must have isDeleted false and is present in collection)
+
+const updateProduct = async function (req, res) {
+    try {
+        let productId = req.params.productId
+
+        if(!validation.validObjectId(productId)) return res.status(400).send({status : false, msg : "ProductId is not valid ObjectId"})
+
+        let productExists = await productModel.findById({_id: productId})
+        if(!productExists) return res.status(404).send({status : false, msg : "product does not exists"})
+
+        let data = req.body
+        
+        if(data?.title){
+            if(!isValid(data.title)) return res.status(400).send({status:false,msg:"BAD title field"})
+            let titleExists = await productModel.findOne({title : data.title})
+            if(titleExists) return res.status(400).send({status:false,msg:"Title already been used, choose another title"})
+        }
+        if(data?.description){
+            if(!isValid(data.description)) return res.status(400).send({status:false,msg:"BAD description field"})
+        }
+        if(data?.price || data.price == 0){
+            if(!isValid(data.price)) return res.status(400).send({status:false,msg:"BAD price field"})
+            data.price = JSON.parse(data.price)
+            if(data.price < 0 || typeof data.price !== typeof 1) return res.status(400).send({status:false,msg:"BAD price value"})
+        }
+        if(data?.isFreeShipping){
+            data.isFreeShipping = JSON.parse(data.isFreeShipping)
+            if(typeof data.isFreeShipping !== typeof false) return res.status(400).send({status:false,msg:"Expects a boolean value at isFreeShipping field"})
+        }
+        let files = req.files
+        if(files && files.length > 0){
+            let uploadedFileURL = await uploadFile(files[0])
+            data.productImage = uploadedFileURL
+        }
+        if(data?.style){
+            if(!isValid(data.style)) return res.status(400).send({status:false,msg:"BAD style field"})
+        }
+        if(data?.availableSizes){
+            if(!isValid(data.availableSizes)) return res.status(400).send({status:false,msg:"BAD availableSizes field"})
+            data.availableSizes = JSON.parse(data.availableSizes)
+            if(typeof data.availableSizes !== typeof []) return res.status(400).send({status:false,msg:"availableSizes field expects an array"})
+        }
+        if(data?.installments){
+            if(!isValid(data.installments)) return res.status(400).send({status:false,msg:"BAD installments field"})
+            data.installments = JSON.parse(data.installments)
+            if(data.installments < 0 || typeof data.installments !== typeof 2) return res.status(400).send({status:false,msg:"BAD installments value"})
+        }
+
+        let updatedProduct = await productModel.findOneAndUpdate({_id : productId}, data, {new : true})
+        return res.status(200).send({status : true, productDetails : updatedProduct})     
+
+        }
     catch (error) {
         return res.status(500).send({ status: false, err: error.message })
     }
@@ -249,4 +236,4 @@ const updateDetails = async function (req, res) {
 }
 
 
-module.exports = { addProducts, getProducts, deleteProduct, updateDetails }
+module.exports = { addProducts, getProducts, deleteProduct, updateProduct, getProductsById }

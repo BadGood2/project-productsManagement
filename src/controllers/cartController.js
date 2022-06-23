@@ -146,7 +146,7 @@ const postCart = async function (req, res) {
                 let cartCreated = await cartModel.create(data)
                 res.status(201).send({ status: true, data: cartCreated })
             } else {
-                return res.status(400).send({ status: false, msg: "Missing ProductId" })
+                return res.status(400).send({ status: false, msg: "Missing productId" })
             }
         }
         else {
