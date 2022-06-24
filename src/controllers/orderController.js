@@ -16,6 +16,7 @@ const postOrder = async function (req, res) {
 
         let userExist = await userModel.findById({ _id: req.params.userId })
         if (!userExist) return res.status(400).send({ status: false, msg: "UserId does not Exists" })
+
         let orderExists = await orderModel.findOne({ userId: req.params.userId })
         if (orderExists) return res.status(400).send({ status: false, msg: "Order already exists for this UserId" })
 
@@ -42,15 +43,12 @@ const postOrder = async function (req, res) {
 
         if (data?.cancellable) {
             data.cancellable = JSON.parse(data.cancellable)
-            if (typeof data.cancellable !== 'Boolean') return res.status(400).send({ status: false, msg: "cancellable field is invalid" })
+            if (typeof data.cancellable !== typeof true) return res.status(400).send({ status: false, msg: "cancellable field is invalid" })
         }
 
         if (data?.status) {
             if (!/^(pending|completed|canceled){1}$/) return res.status(400).send({ status: false, msg: "Takes a ENUM value " })
         }
-
-        let cartEmpty = await cartModel.findOneAndUpdate({ userId: req.params.userId }, { items: [], totalPrice: 0, totalItems: 0 })
-
 
         let orderCreate = await orderModel.create(data)
         res.status(201).send({ status: true, data: orderCreate })
@@ -65,15 +63,16 @@ const updateOrder = async function (req, res) {
         if (!validation.validBody(req.body)) return res.status(400).send({ status: false, msg: "Empty or Bad Body" })
         let data = req.body
         if (!validation.validObjectId(req.params.userId)) return res.status(400).send({ status: false, msg: "Bad userId" })
+        
+        if (!validation.isValid(data.orderId)) return res.status(400).send({ status: false, msg: "Bad orderId" })
 
+        if (!validation.validObjectId(data.orderId)) return res.status(400).send({ status: false, msg: "Bad orderId" })
+        
         let userExist = await userModel.findById({ _id: req.params.userId })
         if (!userExist) return res.status(400).send({ status: false, msg: "UserId does not Exists" })
         let orderExists = await orderModel.findOne({ userId: req.params.userId })
         if (!orderExists) return res.status(400).send({ status: false, msg: "Order does not exists for this UserId given in params" })
 
-        if (!validation.isValid(data.orderId)) return res.status(400).send({ status: false, msg: "Bad orderId" })
-
-        if (!validation.validObjectId(data.orderId)) return res.status(400).send({ status: false, msg: "Bad orderId" })
 
         let orderValid = await orderModel.findById({ _id: data.orderId })
         if (orderValid.userId.toString() !== req.params.userId) return res.status(400).send({ status: false, msg: "UserId inside Order and in params do not match" })
