@@ -4,13 +4,14 @@ const { AppConfig } = require('aws-sdk')
 const bodyparser = require('body-parser')
 const mongoose = require('mongoose')
 const router = require('./routes/route')
+require('dotenv').config()
 
 const app = express()
 app.use(bodyparser.json())
 app.use(multer().any())
 
 
-mongoose.connect("mongodb+srv://nas:nas1234@cluster0.fci9p.mongodb.net/shopping-cart-database",
+mongoose.connect(process.env.MONGO_URI,
     { useNewUrlParser: true })
     .then(() => console.log("mongoDB is Connected!!"))
     .catch(err => console.log(err))
