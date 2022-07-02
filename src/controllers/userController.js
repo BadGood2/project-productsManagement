@@ -151,6 +151,8 @@ const userLogin = async (req, res) => {
 
         if (Object.keys(data).length === 2 && data.email && data.password) {
             let hashedPass = await userModel.findOne({ email: data.email }).select({ _id: 0, password: 1 })
+            if(!hashedPass) return res.status(400).send({ status: false, msg: "Invalid credentials" })
+           
             if (!await bcrypt.compare(data.password, hashedPass.password)) return res.status(400).send({ status: false, msg: "Invalid credentials" })
 
             data.password = hashedPass.password

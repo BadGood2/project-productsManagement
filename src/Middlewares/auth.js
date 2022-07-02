@@ -1,5 +1,6 @@
 const jwt = require("jsonwebtoken")
-const secret = "Shopping-Cart"
+require('dotenv').config()
+const secret = process.env.SECRET
 const exp = '85000s'
 
 const decodeToken = (token) => {
